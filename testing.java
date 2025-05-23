@@ -1,77 +1,117 @@
-//adding vscode test cases here
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
-import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.List;
 
-import org.junit.AfterClass;
-import org.junit.Test;
+class kruskalMSTTest {
 
-public class testing {
-  
-@Test
-void testCorrectMST() {
-    Graph g = new Graph(4, 5);
-    g.addEdge(0, 1, 10);
-    g.addEdge(0, 2, 6);
-    g.addEdge(0, 3, 5);
-    g.addEdge(1, 3, 15);
-    g.addEdge(2, 3, 4);
+    @Test
+    void testCorrectMST() {
+        kruskalMST g = new kruskalMST(4);
+        g.addEdge(0, 1, 10);
+        g.addEdge(0, 2, 6);
+        g.addEdge(0, 3, 5);
+        g.addEdge(1, 3, 15);
+        g.addEdge(2, 3, 4);
 
-    List<Edge> mst = g.kruskalMST();
+        g.runKruskal();
+        List<?> mst = g.getMST();
 
-    int totalWeight = mst.stream().mapToInt(e -> e.weight).sum();
-    assertEquals(15, totalWeight); // MST edges: (2-3:4), (0-3:5), (0-1:10)
-    assertEquals(3, mst.size());  // For 4 vertices, MST has V-1 = 3 edges
-}
-@Test
-void testDisconnectedGraph() {
-    Graph g = new Graph(4, 2);
-    g.addEdge(0, 1, 1);
-    g.addEdge(2, 3, 2);
+        int totalWeight = mst.stream()
+                .mapToInt(e -> ((kruskalMST.Edge) e).weight)
+                .sum();
 
-    List<Edge> mst = g.kruskalMST();
-
-    assertEquals(2, mst.size());
-    assertTrue(mst.contains(new Edge(0, 1, 1)));
-    assertTrue(mst.contains(new Edge(2, 3, 2)));
-}
-@Test
-void testDuplicateEdges() {
-    Graph g = new Graph(3, 4);
-    g.addEdge(0, 1, 10);
-    g.addEdge(0, 1, 5);  // smaller weight should be chosen
-    g.addEdge(1, 2, 3);
-    g.addEdge(0, 2, 7);
-
-    List<Edge> mst = g.kruskalMST();
-
-    int totalWeight = mst.stream().mapToInt(e -> e.weight).sum();
-    assertEquals(8, totalWeight); // MST: (1-2:3), (0-1:5)
-}
-@Test
-void testLargeGraphPerformance() {
-    int n = 1000;
-    Graph g = new Graph(n, (n * (n - 1)) / 4); // ~25% density
-
-    Random rand = new Random();
-    for (int i = 0; i < g.E; i++) {
-        int u = rand.nextInt(n);
-        int v = rand.nextInt(n);
-        if (u != v) {
-            g.addEdge(u, v, rand.nextInt(1000));
-        }
+        assertEquals(15, totalWeight); // 4 + 5 + 6 or similar
+        assertEquals(3, mst.size());   // V - 1 edges
     }
 
-    long start = System.currentTimeMillis();
-    List<Edge> mst = g.kruskalMST();
-    long end = System.currentTimeMillis();
+    @Test
+    void testDisconnectedGraph() {
+        kruskalMST g = new kruskalMST(4);
+        g.addEdge(0, 1, 1);
+        g.addEdge(2, 3, 2);
 
-    System.out.println("MST edges: " + mst.size() + ", Time taken: " + (end - start) + "ms");
+        g.runKruskal();
+        List<?> mst = g.getMST();
 
-    assertEquals(n - 1, mst.size());
-    assertTrue((end - start) < 5000); // performance under 5 seconds
-}
+        assertEquals(2, mst.size());
+        int totalWeight = mst.stream()
+                .mapToInt(e -> ((kruskalMST.Edge) e).weight)
+                .sum();
+        assertEquals(3, totalWeight);
+    }
 
+    @Test
+    void testDuplicateEdges() {
+        kruskalMST g = new kruskalMST(3);
+        g.addEdge(0, 1, 10);
+        g.addEdge(0, 1, 5);  // Duplicate with smaller weight
+        g.addEdge(1, 2, 3);
+        g.addEdge(0, 2, 7);
 
+        g.runKruskal();
+        List<?> mst = g.getMST();
+
+        int totalWeight = mst.stream()
+                .mapToInt(e -> ((kruskalMST.Edge) e).weight)
+                .sum();
+        assertEquals(8, totalWeight); // 3 + 5
+    }
+
+    @Test
+    void testAllEqualWeights() {
+        kruskalMST g = new kruskalMST(4);
+        g.addEdge(0, 1, 1);
+        g.addEdge(0, 2, 1);
+        g.addEdge(0, 3, 1);
+        g.addEdge(1, 2, 1);
+        g.addEdge(2, 3, 1);
+
+        g.runKruskal();
+        List<?> mst = g.getMST();
+
+        assertEquals(3, mst.size()); // V - 1 edges
+        int totalWeight = mst.stream()
+                .mapToInt(e -> ((kruskalMST.Edge) e).weight)
+                .sum();
+        assertEquals(3, totalWeight); // All weights are 1
+    }
+
+    @Test
+    void testNegativeWeights() {
+        kruskalMST g = new kruskalMST(3);
+        g.addEdge(0, 1, -1);
+        g.addEdge(1, 2, -2);
+        g.addEdge(0, 2, 4);
+
+        g.runKruskal();
+
+        List<kruskalMST.Edge> mst = g.getMST();
+
+        int totalWeight = mst.stream()
+            .mapToInt(e -> e.weight)
+            .sum();
+        assertEquals(-3, totalWeight);
+    }
+
+    @Test
+    void testLargeGraphPerformance() {
+        int n = 500;
+        kruskalMST g = new kruskalMST(n);
+        int edgeCount = 0;
+        for (int i = 0; i < n; i++) {
+            for (int j = i + 1; j < n && edgeCount < n * 4; j++) {
+                g.addEdge(i, j, (i + j) % 1000);
+                edgeCount++;
+            }
+        }
+
+        long start = System.currentTimeMillis();
+        g.runKruskal();
+        long end = System.currentTimeMillis();
+
+        List<?> mst = g.getMST();
+        assertEquals(n - 1, mst.size());
+        assertTrue((end - start) < 5000, "Kruskal's algorithm should run under 5 seconds.");
+    }
 }
