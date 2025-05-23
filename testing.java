@@ -114,4 +114,49 @@ class kruskalMSTTest {
         assertEquals(n - 1, mst.size());
         assertTrue((end - start) < 5000, "Kruskal's algorithm should run under 5 seconds.");
     }
+    @Test
+    void testSparceGraph() {
+        kruskalMST g = new kruskalMST(6); // verticies
+        g.addEdge(0, 4, 4);
+        g.addEdge(0, 1, 2);
+        g.addEdge(0, 3, 1);
+        g.addEdge(1, 2, 3);
+        g.addEdge(1, 5, 7);
+
+        g.runKruskal();
+        List<kruskalMST.Edge> mst = g.getMST();
+
+        // Verify the MST edges and their total weight
+        int totalWeight = mst.stream()
+                .mapToInt(e -> e.weight)
+                .sum();
+
+        assertEquals(17, totalWeight); // Total weight of MST
+        assertEquals(5, mst.size());   // Number of edges in MST (V - 1)
+    }
+    @Test
+    void testFullyConnectedGraph() {
+        kruskalMST g = new kruskalMST(7); // verticies
+        g.addEdge(0, 3, 3);
+        g.addEdge(0, 1, 2);
+        g.addEdge(1, 2, 4);
+        g.addEdge(1, 4, 3);
+        g.addEdge(2, 4, 1);
+        g.addEdge(2, 3, 5);
+        g.addEdge(3, 5, 7);
+        g.addEdge(5, 4, 8);
+        g.addEdge(5, 6, 9);
+
+        g.runKruskal();
+        List<kruskalMST.Edge> mst = g.getMST();
+
+        // Verify the MST edges and their total weight
+        int totalWeight = mst.stream()
+                .mapToInt(e -> e.weight)
+                .sum();
+
+        assertEquals(25, totalWeight); // Total weight of MST
+        assertEquals(6, mst.size());   // Number of edges in MST (V - 1)
+    }
+
 }
